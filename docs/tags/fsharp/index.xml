@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>mafinar.dev</title>
-    <link>/</link>
-    <description>Recent content on mafinar.dev</description>
+    <title>fsharp on mafinar.dev</title>
+    <link>/tags/fsharp/</link>
+    <description>Recent content in fsharp on mafinar.dev</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Mafinar K. 2021</copyright>
-    <lastBuildDate>Wed, 14 Jul 2021 09:09:23 -0400</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 14 Jul 2021 09:09:23 -0400</lastBuildDate><atom:link href="/tags/fsharp/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Many Ways to Reach a Floor</title>
       <link>/posts/many-ways-to-reach-a-floor/</link>

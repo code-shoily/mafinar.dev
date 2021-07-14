@@ -6,6 +6,37 @@
     <description>Recent content in Tags on mafinar.dev</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <copyright>Mafinar K. 2021</copyright><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    <copyright>Mafinar K. 2021</copyright>
+    <lastBuildDate>Wed, 14 Jul 2021 09:09:23 -0400</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>100-days-of-fsharp</title>
+      <link>/tags/100-days-of-fsharp/</link>
+      <pubDate>Wed, 14 Jul 2021 09:09:23 -0400</pubDate>
+      
+      <guid>/tags/100-days-of-fsharp/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>advent-of-code</title>
+      <link>/tags/advent-of-code/</link>
+      <pubDate>Wed, 14 Jul 2021 09:09:23 -0400</pubDate>
+      
+      <guid>/tags/advent-of-code/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>fsharp</title>
+      <link>/tags/fsharp/</link>
+      <pubDate>Wed, 14 Jul 2021 09:09:23 -0400</pubDate>
+      
+      <guid>/tags/fsharp/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
   </channel>
 </rss>

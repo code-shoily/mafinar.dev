@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Many Ways to Reach a Floor :: mafinar.dev</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="On my day 1 of #100DaysOfFSharp I solved Advent of Code 2015/1 and I am sharing the experience here" />
+<meta name="keywords" content="fsharp, 100-days-of-fsharp, advent-of-code" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/many-ways-to-reach-a-floor/" />
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4YZF8LVTFQ"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-4YZF8LVTFQ', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon" href="/img/apple-touch-icon-192x192.png">
+
+  <link rel="shortcut icon" href="/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="mafinar" />
+  
+    <meta name="twitter:creator" content="mafinar" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Many Ways to Reach a Floor">
+<meta property="og:description" content="On my day 1 of #100DaysOfFSharp I solved Advent of Code 2015/1 and I am sharing the experience here" />
+<meta property="og:url" content="/posts/many-ways-to-reach-a-floor/" />
+<meta property="og:site_name" content="mafinar.dev" />
+
+  <meta property="og:image" content="/">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2021-07-14 09:09:23 -0400 EDT" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    λ#
+  </div>
+</a>
+
+    </div>
+    
+  </div>
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/many-ways-to-reach-a-floor/">Many Ways to Reach a Floor</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2021-07-14 
+      </span>
+    
+    
+    <span class="post-author">:: mafinar</span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="/tags/fsharp/">fsharp</a>&nbsp;
+    
+    #<a href="/tags/100-days-of-fsharp/">100-days-of-fsharp</a>&nbsp;
+    
+    #<a href="/tags/advent-of-code/">advent-of-code</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>This is day 1 of my #100DaysOfFSharp and in this post I will talk about what I learned today. I tried solving <a href="https://adventofcode.com/2015/day/1">Advent of Code 2015&rsquo;s Day 1</a> - an easy problem that packed a lot of F# education for me.</p>
+<p>The problem is stated in the link but the <code>tl;dr</code> of it is climbing up and down based on a specific instruction - <code>(</code> means going up while <code>)</code> means down. And the input is a lot parenthesis- reminiscent of Lisp jokes. The title of the problem: <code>Not Quite Lisp</code></p>
+<p>We have two parts of the puzzle here:</p>
+<ol>
+<li>If one starts from ground floor and follows the given instruction set, the program should figure out what floor will be reached after all up/down instructions are followed.</li>
+<li>If one starts from ground floor and scans the given instruction set, the program should figure out how many steps will be required to reach the basement.</li>
+</ol>
+<p>0 = Ground Floor. -1 = Basement.</p>
+<h2 id="part-1">Part 1<a href="#part-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>F# is a &ldquo;functional first&rdquo; language, which means I should be able to do things without thinking too functionally. This should also be an opportunity for me to see how to deal with mutations here, as it is more than likely that I might not be doing too many mutables in future. So let&rsquo;s think this problem through the procedural lens. I read up on <a href="https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/values/"><code>mutable</code></a> and <a href="https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/loops-for-in-expression"><code>for</code></a> in F# and came up with the following snippet. Loved that <code>&lt;-</code> for mutation.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> toFloorIter instructions <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">let</span> mutable destinationFloor <span style="color:#f92672">=</span> 0
+
+    <span style="color:#66d9ef">for</span> i <span style="color:#66d9ef">in</span> instructions <span style="color:#66d9ef">do</span>
+        <span style="color:#66d9ef">if</span> i <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#66d9ef">then</span>
+            destinationFloor <span style="color:#f92672">&lt;-</span> destinationFloor <span style="color:#f92672">+</span> 1
+        <span style="color:#66d9ef">else</span>
+            destinationFloor <span style="color:#f92672">&lt;-</span> destinationFloor <span style="color:#f92672">-</span> 1
+
+    destinationFloor
+</code></pre></div><p>That worked well! now let&rsquo;s get to the &ldquo;Functional&rdquo; bit. Why not replace all the <code>(</code>s with <code>1</code>s and <code>)</code>s with <code>-1</code>s and sum it up? That looks like a thing that is simple and should work? Let' grab a module that gives me maps, reduces, filter etc and do it!</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> toFloorWithMap <span style="color:#f92672">(</span>instructions<span style="color:#f92672">:</span> <span style="color:#66d9ef">string</span><span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    instructions
+    <span style="color:#f92672">|&gt;</span> Seq.map<span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> instruction <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">if</span> instruction <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#66d9ef">then</span> 1 <span style="color:#66d9ef">else</span> <span style="color:#f92672">-</span>1<span style="color:#f92672">)</span>
+    <span style="color:#f92672">|&gt;</span> Seq.sum
+</code></pre></div><p>Pipes are awesome.</p>
+<p>Now, let&rsquo;s try reduction! I mean, I could (and did) totally reinvent the wheel and replace <code>Seq.sum</code> with <code>Seq.reduce (+)</code> but reducing flow could potentially save me a step in the pipeline. In other words, I can start with 0, and a reducer function that takes it, and an char from the instruction and either increments or decrements it, then by the time I am done scanning the list, I should be reaching the desired floor. In the process, I can extract the <code>if ... then</code> logic into its own function.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> followInstruction current instruction <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">if</span> instruction <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#66d9ef">then</span>
+        current <span style="color:#f92672">+</span> 1
+    <span style="color:#66d9ef">else</span>
+        current <span style="color:#f92672">-</span> 1 
+
+<span style="color:#66d9ef">let</span> toFloorWithFold <span style="color:#f92672">(</span>instructions<span style="color:#f92672">:</span> <span style="color:#66d9ef">string</span><span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    Seq.fold followInstruction 0 instructions
+</code></pre></div><p>I said reduce but used fold, that is because I needed an initial state and the result type is not type the sequence is of. I would thank IDE and strong typing for teaching me this without having to StackOverflow (I use Jetbrains Rider). I <strong>did</strong> try <code>reduce</code>. The typespec is so beautifully legible:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp">List.fold <span style="color:#f92672">:</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">&#39;</span>State <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>T <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>State<span style="color:#f92672">)</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>State <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>T <span style="color:#66d9ef">list</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>State
+List.reduce <span style="color:#f92672">:</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">&#39;</span>T <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>T <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>T<span style="color:#f92672">)</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>T <span style="color:#66d9ef">list</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">&#39;</span>T
+</code></pre></div><p>Before going point-free there was one thing I wished to check for- I used <code>if then else</code> without checking for <code>(</code>, assuming the input is comprised solely of <code>(</code> and <code>)</code> (it actually is), however, while depending on how I pull the inputs, there could be an <code>&quot;\n&quot;</code> or an unwanted <code>&quot; &quot;</code> lying around. Also, this is an opportunity to use the match operator! So if I had to refactor <code>followInstruction</code> to use pattern matching:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> followInstructions current instruction <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">match</span> instruction <span style="color:#66d9ef">with</span>
+    <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#f92672">-&gt;</span> current <span style="color:#f92672">+</span> 1
+    <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;)&#39;</span> <span style="color:#f92672">-&gt;</span> current <span style="color:#f92672">-</span> 1
+    <span style="color:#f92672">|</span> <span style="color:#f92672">_</span> <span style="color:#f92672">-&gt;</span> 0
+</code></pre></div><p>&hellip;or I could <code>failwith</code> a message, but let&rsquo;s assume anything other than <code>(|)</code> is inconsequential.</p>
+<p>Now let&rsquo;s see if we can go point free. <code>toFloorWithFold</code> can be <code>fun instruction -&gt; ...</code> and since <code>f(x, y)</code> is <code>f(x)(y)</code>, by leaving out <code>instructions</code> parameter, I can have this return a function that takes that missing <code>instructions</code> as parameter. Which leads me to:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> toFloorWithFoldPointFree <span style="color:#f92672">:</span> seq<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">char</span><span style="color:#f92672">&gt;</span> <span style="color:#f92672">-&gt;</span> int <span style="color:#f92672">=</span> 
+    Seq.fold followInstructions 0
+</code></pre></div><p>And F# forced me to add typed in this version! Which led me to <a href="https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/generics/automatic-generalization">this nice article</a>. Let&rsquo;s liberate the mapped version from shackles of a point:</p>
+<pre><code>let toFloorWithMapPointFree : seq&lt;char&gt; -&gt; int =
+    Seq.map (followInstructions 0) &gt;&gt; Seq.sum
+</code></pre><p>So <code>&gt;&gt;</code> composes two functions, kindof like a curried <code>|&gt;</code>. There&rsquo;s also a <code>&lt;&lt;</code>. I have never use such a construct before though I see myself using it a lot. That one-liner read as &ldquo;Create a function that maps each element of the &ldquo;seqable&rdquo; it receives to <code>followInstruction</code> function, giving it <code>0</code>; then it just sums it&rdquo;.</p>
+<p>Wow, quite a few ways to reach a floor! Now let&rsquo;s see how many steps we&rsquo;d need to get to the basement!</p>
+<h2 id="part-2">Part 2<a href="#part-2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>This too is an easy problem to solve. Instead of looping over the instructions and updating the <code>currentFloor</code> TILL THE END, we stop iterating when the <code>currentFloor</code> is <code>-1</code> and the <code>counter</code> at that time is our answer. So a C style <code>for loop</code> with a <code>break</code> would be perfect for it. Or <code>while</code>, like below:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> toBasementWhile <span style="color:#f92672">(</span>instructions<span style="color:#f92672">:</span> <span style="color:#66d9ef">string</span><span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">let</span> mutable steps <span style="color:#f92672">=</span> 0
+    <span style="color:#66d9ef">let</span> mutable current <span style="color:#f92672">=</span> 0
+    <span style="color:#66d9ef">let</span> instructionArray <span style="color:#f92672">=</span> instructions<span style="color:#f92672">.</span>ToCharArray()
+    <span style="color:#66d9ef">while</span> current <span style="color:#f92672">&lt;&gt;</span> <span style="color:#f92672">-</span>1 <span style="color:#66d9ef">do</span>
+        <span style="color:#66d9ef">if</span> instructionArray<span style="color:#f92672">.[</span>steps<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#66d9ef">then</span>
+            current <span style="color:#f92672">&lt;-</span> current <span style="color:#f92672">+</span> 1
+        <span style="color:#66d9ef">else</span>
+            current <span style="color:#f92672">&lt;-</span> current <span style="color:#f92672">-</span> 1
+        steps <span style="color:#f92672">&lt;-</span> steps <span style="color:#f92672">+</span> 1
+    steps
+</code></pre></div><p>I could not find a sane looking <code>break</code> policy for a loop in F#, and <code>ToCharArray</code> is a method my recent encounters with C# familiarized me with, so grabbed it. And again, it worked!</p>
+<p>Enough with the iterative approach, let&rsquo;s try some good old fashioned recursion.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> rec doStepsToBasement <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">function</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">(</span>step<span style="color:#f92672">,</span> <span style="color:#f92672">-</span>1<span style="color:#f92672">,</span> <span style="color:#f92672">_)</span> <span style="color:#f92672">-&gt;</span> step
+    <span style="color:#f92672">|</span> <span style="color:#f92672">(</span>step<span style="color:#f92672">,</span> current<span style="color:#f92672">,</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#f92672">::</span> instructions<span style="color:#f92672">)</span> <span style="color:#f92672">-&gt;</span> doStepsToBasement <span style="color:#f92672">(</span>step <span style="color:#f92672">+</span> 1<span style="color:#f92672">,</span> current <span style="color:#f92672">+</span> 1<span style="color:#f92672">,</span> instructions<span style="color:#f92672">)</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">(</span>step<span style="color:#f92672">,</span> current<span style="color:#f92672">,</span> <span style="color:#e6db74">&#39;)&#39;</span> <span style="color:#f92672">::</span> instructions<span style="color:#f92672">)</span> <span style="color:#f92672">-&gt;</span> doStepsToBasement <span style="color:#f92672">(</span>step <span style="color:#f92672">+</span> 1<span style="color:#f92672">,</span> current <span style="color:#f92672">-</span> 1<span style="color:#f92672">,</span> instructions<span style="color:#f92672">)</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">_</span> <span style="color:#f92672">-&gt;</span> failwith <span style="color:#e6db74">&#34;Invalid input&#34;</span>
+
+<span style="color:#66d9ef">let</span> stepsToBasementRecur <span style="color:#f92672">(</span>instructions<span style="color:#f92672">:</span> <span style="color:#66d9ef">string</span><span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    doStepsToBasement <span style="color:#f92672">(</span>0<span style="color:#f92672">,</span> 0<span style="color:#f92672">,</span> instructions <span style="color:#f92672">|&gt;</span> Seq.map <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> l <span style="color:#f92672">-&gt;</span> l<span style="color:#f92672">)</span> <span style="color:#f92672">|&gt;</span> Seq.toList<span style="color:#f92672">)</span>
+</code></pre></div><p>Rest style pattern matching is one of my favorite super powers. I could just visualize an instruction as a dispenser, dispensing one instruction at a time, until it&rsquo;s empty, and everytime the spitted out parenthesis, the <code>-1</code>ed instruction list and all computed states are pushed back into the same function! Pretty. (That made absolutely no sense now did it?)</p>
+<p>I searched for a <code>reduce_while</code> in <code>Seq</code> but could not find any, but there is a <code>scan</code>, which is like a dispenser of reduced items on the fly, so, why not do something like:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> stepsToBasement <span style="color:#f92672">:</span> seq<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">char</span><span style="color:#f92672">&gt;</span> <span style="color:#f92672">-&gt;</span> int <span style="color:#f92672">=</span>
+    Seq.map <span style="color:#f92672">(</span>followInstructions 0<span style="color:#f92672">)</span>
+    <span style="color:#f92672">&gt;&gt;</span> Seq.scan <span style="color:#f92672">(+)</span> 0
+    <span style="color:#f92672">&gt;&gt;</span> Seq.findIndex <span style="color:#f92672">((=)</span> <span style="color:#f92672">-</span>1<span style="color:#f92672">)</span>
+</code></pre></div><p>And this time point-freedom came naturally to me! Didn&rsquo;t miss <code>reduce-while</code> much. And also, I did think about <code>Seq.indexed</code> and then scanning but luckily I found out about <code>findIndex</code> early on.</p>
+<p>And that ends my day 1 of the 100 days of F#.</p>
+<h2 id="my-approach-at-learning-things-today">My approach at learning things today<a href="#my-approach-at-learning-things-today" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>So this was a really interesting experience for me. Usually I learn languages (ones I learn for fun) from books- I buy a book and work through the examples, the most recent one being &ldquo;C# 9.0 Pocket Reference&rdquo;. However in this case, I just went head-on with problem solving armed only with common-sense. I picked a problem, thought of ways to solve it, and googled generic applicable terms to come up with F# artifacts to help me construct outcomes. This took longer time and slower (initial) progress but it did give me that feeling of &ldquo;struggle&rdquo; and &ldquo;resistance&rdquo; which leads to true appreciation of the programming language. I had no idea what an F# <code>Seq</code> meant, what separated <code>reduce</code> from <code>fold</code>, or how I would mutate the mutable. Those would probably not be colocated in one chapter of (m)any books, but I dug scattered information from the web and stayed in REPL until everything made sense. And that was a fun, fulfilling learning experience, more of which I look forward too.</p>
+<h2 id="any-final-words">Any final words?<a href="#any-final-words" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>The official F# documentation is beyond awesome. The article on Automatic Generalization had little to do with my work today but I stumbled upon it any way, and got pretty well enlightened. Almost every article I read from the docuemtation site has been enjoyable and to the point. For example, <a href="https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/fsharp-collection-types">this page</a> is something every language should cover! As for the day 1 in general, this has been a much entertaining day for me. I can safely say that I am looking forward to the 99 other days and beyond! My gratitude to everyone involved in creating and nurturing this amazing language!</p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>Mafinar K. 2021</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

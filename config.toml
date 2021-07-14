@@ -8,10 +8,10 @@ googleAnalytics = "G-4YZF8LVTFQ"
 [params]
   # dir name of your main content (default is `content/posts`).
   # the list of set content will show up on your index page (baseurl).
-  contentTypeName = "posts"
+  #contentTypeName = "posts"
 
   # ["orange", "blue", "red", "green", "pink"]
-  themeColor = "blue"
+  themeColor = "green"
 
   # if you set this to 0, only submenu trigger will be visible
   showMenuItems = 2
@@ -36,7 +36,7 @@ googleAnalytics = "G-4YZF8LVTFQ"
 
   # set all headings to their default size (depending on browser settings)
   # it's set to `true` by default
-  oneHeadingSize = false
+  # oneHeadingSize = false
 
 [params.twitter]
   # set Twitter handles for Twitter cards
@@ -49,7 +49,7 @@ googleAnalytics = "G-4YZF8LVTFQ"
   [languages.en]
     languageName = "English"
     title = "mafinar.dev"
-    subtitle = "A Simple DevBlog"
+    subtitle = "Mafinar's DevBlog"
     owner = "Mafinar Khan"
     keywords = ""
     copyright = "Mafinar K. 2021"
@@ -62,7 +62,7 @@ googleAnalytics = "G-4YZF8LVTFQ"
     missingBackButtonLabel = "Back to home page"
 
     [languages.en.params.logo]
-      logoText = "A Basic DevBlog"
+      logoText = "λ#"
       logoHomeLink = "/"
 
     # [languages.en.menu]
