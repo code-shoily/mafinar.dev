@@ -7,7 +7,93 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Mafinar K. 2021</copyright>
-    <lastBuildDate>Wed, 14 Jul 2021 09:09:23 -0400</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 02 Aug 2021 00:16:59 -0400</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Stacked Reactions</title>
+      <link>/posts/stacked-reactions/</link>
+      <pubDate>Mon, 02 Aug 2021 00:16:59 -0400</pubDate>
+      
+      <guid>/posts/stacked-reactions/</guid>
+      <description>tl;dr I solved Advent of Code Year 2018, Day 5 and here is the code. When I first encountered LIFO (i.e. Stack) data structures back in my Algorithmics course, I found the implementation to be easy compared to, say linked lists, however, to identify its use in a real life problem (for instance, parenthesis matching) was something I had struggled with. I mean, I would probably be able to solve one with stiching expressions and statements but to immediately realize that the problem is addressable with a stack never came to me easily.</description>
+      <content>&lt;h5 id=&#34;tldr-i-solved-advent-of-code-year-2018adventofcodecom2018day5-day-5-and-here-is-the-codegithubcomcode-shoilyadventofcodeblobmasterfsharpy18year2018day05fs&#34;&gt;tl;dr I solved &lt;a href=&#34;//adventofcode.com/2018/day/5&#34;&gt;Advent of Code Year 2018&lt;/a&gt;, Day 5 and &lt;a href=&#34;//github.com/code-shoily/AdventOfCode/blob/master/fsharp/Y18/Year2018Day05.fs&#34;&gt;here is the code&lt;/a&gt;.&lt;/h5&gt;
+&lt;p&gt;When I first encountered LIFO (i.e. Stack) data structures back in my Algorithmics course, I found the implementation to be easy compared to, say linked lists, however, to identify its use in a real life problem (for instance, parenthesis matching) was something I had struggled with. I mean, I would probably be able to solve one with stiching expressions and statements but to immediately realize that the problem is addressable with a stack never came to me easily. I eventually overcame that (Or so I think), and today&amp;rsquo;s post, and the advent of code puzzle involved, involved a LIFO.&lt;/p&gt;
+&lt;p&gt;So what does the description say? To summarize, any &lt;code&gt;&amp;lt;lower-case&amp;gt;&amp;lt;upper-case&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;upper-case&amp;gt;&amp;lt;lower-case&amp;gt;&lt;/code&gt; sequence of the same letter would need to evaporate in a sequence of letters (unit type, they say), and you keep collapsing such pair until there remains no other. That&amp;rsquo;s when you output the length of a non-reducable (reactible, they say) sequence of units.&lt;/p&gt;
+&lt;p&gt;To give an example (I copied the example from the site as-is):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;dabAcCaCBAcCcaDA  The first &#39;cC&#39; is removed.
+dabAaCBAcCcaDA    This creates &#39;Aa&#39;, which is removed.
+dabCBAcCcaDA      Either &#39;cC&#39; or &#39;Cc&#39; are removed (the result is the same).
+dabCBAcaDA        No further actions can be taken.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The result of the above sequence would be the length of the non-reducible sequence &lt;code&gt;dabCBAcaDA&lt;/code&gt;, or &lt;code&gt;10&lt;/code&gt;. Now they slapped me with a &lt;code&gt;50_000&lt;/code&gt; character sequence that would follow the process above.&lt;/p&gt;
+&lt;p&gt;When writing programs in F#, and I only had 17 days of it, I found out that treating input as a sequence, and pouring that sequence through a series of transformation helps me produce tolerable looking code. And to assume that everything already happened (as oppose to my function making them happen) helps more.&lt;/p&gt;
+&lt;p&gt;For instance, let&amp;rsquo;s see how I would see the sequence of &lt;code&gt;units&lt;/code&gt; as mentioned here transform till I get my desired result:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;daBbAcCd                                                                    The input.
+&#39;d&#39; &#39;a&#39; &#39;B&#39; &#39;b&#39; &#39;A&#39; &#39;c&#39; &#39;C&#39; &#39;d&#39;                                             As Character Stream
+(&#39;d&#39; &#39;a&#39;) (&#39;a&#39; &#39;B&#39;) (&#39;B&#39; &#39;b&#39;) (&#39;b&#39; &#39;A&#39;) (&#39;A&#39; &#39;c&#39;) (&#39;c&#39; &#39;C&#39;) (&#39;C&#39; &#39;d&#39;)       In two-s
+(&#39;d&#39; &#39;a&#39;) (&#39;a&#39; _) (_ &#39;A&#39;) (&#39;A&#39; _) (_ &#39;d&#39;)                                   Get rid of (a, b) where (lower a) = (lower b)
+&#39;d&#39; &#39;a&#39; &#39;A&#39; &#39;d&#39;                                                             Stringify them
+(&#39;d&#39; &#39;a&#39;) (&#39;a&#39; &#39;A&#39;) (&#39;A&#39; &#39;d&#39;)                                               In two-s (Again)
+(&#39;d&#39; _) (_ &#39;d&#39;)                                                             Get rid of (a, b) where (lower a) = (lower b)  
+&#39;d&#39; &#39;d&#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;See, that transformation works! In paper and pencil, and given &lt;code&gt;Seq.windowed&lt;/code&gt; exists and there is nothing one can&amp;rsquo;t do with &lt;code&gt;Seq.fold&lt;/code&gt;, I am fairly certain that I can whip up a nice little F# code out of it. Succint? Yes. Elegant? I am not quite sure.&lt;/p&gt;
+&lt;p&gt;So, I gave myself fifteen more minutes to think a bit more on this. I used the term &amp;ldquo;pour&amp;rdquo; earlier, so what if I pour in the &lt;code&gt;unit&lt;/code&gt;-s, hold what I just poured and match it with the next drop? Let&amp;rsquo;s sketch it again:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;daBbAcCd                            The input.
+&#39;d&#39; &#39;a&#39; &#39;B&#39; &#39;b&#39; &#39;A&#39; &#39;c&#39; &#39;C&#39; &#39;d&#39;     As Character Stream
+&#39;d&#39; | &#39;a&#39; &#39;B&#39; &#39;b&#39; &#39;A&#39; &#39;c&#39; &#39;C&#39; &#39;d&#39;   Partition after head, &#39;d&#39; | &#39;a&#39;, move right.
+&#39;d&#39; &#39;a&#39; | &#39;B&#39; &#39;b&#39; &#39;A&#39; &#39;c&#39; &#39;C&#39; &#39;d&#39;   &#39;a&#39; | &#39;B&#39;, move right
+&#39;d&#39; &#39;a&#39; &#39;B&#39; | &#39;b&#39; &#39;A&#39; &#39;c&#39; &#39;C&#39; &#39;d&#39;   &#39;B&#39; | &#39;b&#39;, delete both sides of partition, stay
+&#39;d&#39; &#39;a&#39; | &#39;A&#39; &#39;c&#39; &#39;C&#39; &#39;d&#39;           &#39;a&#39; | &#39;A&#39;, delete both sides of partition, stay
+&#39;d&#39; | &#39;c&#39; &#39;C&#39; &#39;d&#39;                   &#39;d&#39; | &#39;C&#39;, move right
+&#39;d&#39; &#39;c&#39; | &#39;C&#39; &#39;d&#39;                   &#39;c&#39; | &#39;C&#39;, delete both sides of partition, stay
+&#39;d&#39; | &#39;d&#39;                           &#39;d&#39; | &#39;d&#39;, move right
+&#39;d&#39; &#39;d&#39; |                           DONE
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Now this makes some sense, I can focus on line 1, and go down at line 10 in one breath, without ever backtracking my thoughts. I will now implement this in code.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s look into what&amp;rsquo;s on the left and right sides of the &lt;code&gt;|&lt;/code&gt;. If I take one character from the left of the sequence, and compare it to what is at the right most of the left partition and use a comparison function to decide whether it will &lt;code&gt;append&lt;/code&gt; to the left partition, or go down and take that right-most part with it, that sounds like similar operation to what the sketch above shows.&lt;/p&gt;
+&lt;p&gt;In other words, at any given snapshot of &lt;code&gt;0 1 2 3 4 | 5 6 7&lt;/code&gt;, &lt;code&gt;4&lt;/code&gt; will be compared with &lt;code&gt;5&lt;/code&gt; and if they are to react, then the data structure will look like &lt;code&gt;0 1 2 3 | 6 7&lt;/code&gt; and if they are to not react, then they would look like &lt;code&gt;0 1 2 3 4 5 | 6 7&lt;/code&gt;. So, the left data structure needs only the append or remove fast to the right most element (aka the last inserted item). So before I (finally), get into the code, I&amp;rsquo;d need the following:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;A mechanism to read one element of a sequence&lt;/li&gt;
+&lt;li&gt;A function that lets me compare two characters and decide whether they react or not, and&lt;/li&gt;
+&lt;li&gt;A stack, that will maintain the &lt;code&gt;visited&lt;/code&gt; values and with the exception of the top-most (right-most) character, it is guaranteed that no reaction can be possible.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Here&amp;rsquo;s how my &lt;code&gt;react&lt;/code&gt; function looks like:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-fsharp&#34; data-lang=&#34;fsharp&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; react sequence &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+    sequence
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; Seq.fold
+        &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;fun&lt;/span&gt; visited unitType &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;match&lt;/span&gt; visited &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; right &lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt; nonReactive &lt;span style=&#34;color:#66d9ef&#34;&gt;when&lt;/span&gt; abs &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;unitType &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; right&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 32 &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; nonReactive
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;_&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; unitType &lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt; visited&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+        List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;int&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;.&lt;/span&gt;Empty
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; Seq.length
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This worked, and gave me a sweet &lt;code&gt;*&lt;/code&gt;. Oh, I decided to &lt;code&gt;int&lt;/code&gt; my character stream, though I realize I could just as well kept it as a string sequence and compared with converting both to either lower or upper case.&lt;/p&gt;
+&lt;p&gt;Also, since I am using &lt;code&gt;fold&lt;/code&gt; anyway, why not compute the &lt;code&gt;length&lt;/code&gt; on the fly and keep it as a &lt;code&gt;state&lt;/code&gt;? And get some point-freedom while at it? And let&amp;rsquo;s just use some Stack terminology.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-fsharp&#34; data-lang=&#34;fsharp&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; react &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+    Seq.fold
+        &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;length&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; stack&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; unitType &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;match&lt;/span&gt; stack &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; top &lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt; bottom &lt;span style=&#34;color:#66d9ef&#34;&gt;when&lt;/span&gt; abs &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;unitType &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; top&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 32 &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;length &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; 1&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; bottom&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;_&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;length &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; 1&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; unitType &lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt; stack&lt;span style=&#34;color:#f92672&#34;&gt;))&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;int&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;.&lt;/span&gt;Empty&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; fst
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;I am happy with this code. And that concludes part 1.&lt;/p&gt;
+&lt;p&gt;About part 2, well, it&amp;rsquo;s just part 1 with some pseudo-brute-forcing. What if we removed all &lt;code&gt;a|A&lt;/code&gt;-s from the sequence and ran the reaction? What if we removed &lt;code&gt;b|B&lt;/code&gt;s? &lt;code&gt;c|C&lt;/code&gt;-s? So you can see, we just need to call &lt;code&gt;react&lt;/code&gt; function on 26 different inputs, and find the shortest non-reducable sequence. And this code looked like:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-fsharp&#34; data-lang=&#34;fsharp&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; solvePart2 input &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+    seq &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; 65 &lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt; 90 &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; Seq.map
+        &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;fun&lt;/span&gt; currentUnit &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;
+            input
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; parse
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; Seq.filter
+                &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;fun&lt;/span&gt; unitType &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;
+                    unitType &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt; currentUnit
+                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; unitType &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;currentUnit &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; 32&lt;span style=&#34;color:#f92672&#34;&gt;))&lt;/span&gt;
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; react&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; Seq.min
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&amp;gt;&lt;/span&gt; output
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So that concludes my day 17. I know my last blog post was labelled &lt;code&gt;Day 1&lt;/code&gt; and this one &lt;code&gt;Day 17&lt;/code&gt; (Or is it 16?), I solved 15 other problems in between while learning the language and didn&amp;rsquo;t quite get the time to write about it. This one however, I wrote as I solved the problem and that was fun. Maybe I will do it more often.&lt;/p&gt;
+&lt;p&gt;Until I solve another problem, or pick up one of the solve problems to discuss here, have a great evening!&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>Many Ways to Reach a Floor</title>
       <link>/posts/many-ways-to-reach-a-floor/</link>

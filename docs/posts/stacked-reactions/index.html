@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Stacked Reactions :: mafinar.dev</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="In this blog, I write about how I solved Advent of Code 2018/5 with F#. Part of my #100DaysOfFSharp, Day 17" />
+<meta name="keywords" content="fsharp, 100-days-of-fsharp, advent-of-code" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/stacked-reactions/" />
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4YZF8LVTFQ"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-4YZF8LVTFQ', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon" href="/img/apple-touch-icon-192x192.png">
+
+  <link rel="shortcut icon" href="/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="mafinar" />
+  
+    <meta name="twitter:creator" content="mafinar" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Stacked Reactions">
+<meta property="og:description" content="In this blog, I write about how I solved Advent of Code 2018/5 with F#. Part of my #100DaysOfFSharp, Day 17" />
+<meta property="og:url" content="/posts/stacked-reactions/" />
+<meta property="og:site_name" content="mafinar.dev" />
+
+  <meta property="og:image" content="/">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2021-08-02 00:16:59 -0400 EDT" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    λ#
+  </div>
+</a>
+
+    </div>
+    
+  </div>
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/stacked-reactions/">Stacked Reactions</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2021-08-02 
+      </span>
+    
+    
+    <span class="post-author">:: mafinar</span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="/tags/fsharp/">fsharp</a>&nbsp;
+    
+    #<a href="/tags/100-days-of-fsharp/">100-days-of-fsharp</a>&nbsp;
+    
+    #<a href="/tags/advent-of-code/">advent-of-code</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  
+
+  <div class="post-content"><div>
+        <h5 id="tldr-i-solved-advent-of-code-year-2018adventofcodecom2018day5-day-5-and-here-is-the-codegithubcomcode-shoilyadventofcodeblobmasterfsharpy18year2018day05fs">tl;dr I solved <a href="//adventofcode.com/2018/day/5">Advent of Code Year 2018</a>, Day 5 and <a href="//github.com/code-shoily/AdventOfCode/blob/master/fsharp/Y18/Year2018Day05.fs">here is the code</a>.<a href="#tldr-i-solved-advent-of-code-year-2018adventofcodecom2018day5-day-5-and-here-is-the-codegithubcomcode-shoilyadventofcodeblobmasterfsharpy18year2018day05fs" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h5>
+<p>When I first encountered LIFO (i.e. Stack) data structures back in my Algorithmics course, I found the implementation to be easy compared to, say linked lists, however, to identify its use in a real life problem (for instance, parenthesis matching) was something I had struggled with. I mean, I would probably be able to solve one with stiching expressions and statements but to immediately realize that the problem is addressable with a stack never came to me easily. I eventually overcame that (Or so I think), and today&rsquo;s post, and the advent of code puzzle involved, involved a LIFO.</p>
+<p>So what does the description say? To summarize, any <code>&lt;lower-case&gt;&lt;upper-case&gt;</code> or <code>&lt;upper-case&gt;&lt;lower-case&gt;</code> sequence of the same letter would need to evaporate in a sequence of letters (unit type, they say), and you keep collapsing such pair until there remains no other. That&rsquo;s when you output the length of a non-reducable (reactible, they say) sequence of units.</p>
+<p>To give an example (I copied the example from the site as-is):</p>
+<pre><code>dabAcCaCBAcCcaDA  The first 'cC' is removed.
+dabAaCBAcCcaDA    This creates 'Aa', which is removed.
+dabCBAcCcaDA      Either 'cC' or 'Cc' are removed (the result is the same).
+dabCBAcaDA        No further actions can be taken.
+</code></pre><p>The result of the above sequence would be the length of the non-reducible sequence <code>dabCBAcaDA</code>, or <code>10</code>. Now they slapped me with a <code>50_000</code> character sequence that would follow the process above.</p>
+<p>When writing programs in F#, and I only had 17 days of it, I found out that treating input as a sequence, and pouring that sequence through a series of transformation helps me produce tolerable looking code. And to assume that everything already happened (as oppose to my function making them happen) helps more.</p>
+<p>For instance, let&rsquo;s see how I would see the sequence of <code>units</code> as mentioned here transform till I get my desired result:</p>
+<pre><code>daBbAcCd                                                                    The input.
+'d' 'a' 'B' 'b' 'A' 'c' 'C' 'd'                                             As Character Stream
+('d' 'a') ('a' 'B') ('B' 'b') ('b' 'A') ('A' 'c') ('c' 'C') ('C' 'd')       In two-s
+('d' 'a') ('a' _) (_ 'A') ('A' _) (_ 'd')                                   Get rid of (a, b) where (lower a) = (lower b)
+'d' 'a' 'A' 'd'                                                             Stringify them
+('d' 'a') ('a' 'A') ('A' 'd')                                               In two-s (Again)
+('d' _) (_ 'd')                                                             Get rid of (a, b) where (lower a) = (lower b)  
+'d' 'd'
+</code></pre><p>See, that transformation works! In paper and pencil, and given <code>Seq.windowed</code> exists and there is nothing one can&rsquo;t do with <code>Seq.fold</code>, I am fairly certain that I can whip up a nice little F# code out of it. Succint? Yes. Elegant? I am not quite sure.</p>
+<p>So, I gave myself fifteen more minutes to think a bit more on this. I used the term &ldquo;pour&rdquo; earlier, so what if I pour in the <code>unit</code>-s, hold what I just poured and match it with the next drop? Let&rsquo;s sketch it again:</p>
+<pre><code>daBbAcCd                            The input.
+'d' 'a' 'B' 'b' 'A' 'c' 'C' 'd'     As Character Stream
+'d' | 'a' 'B' 'b' 'A' 'c' 'C' 'd'   Partition after head, 'd' | 'a', move right.
+'d' 'a' | 'B' 'b' 'A' 'c' 'C' 'd'   'a' | 'B', move right
+'d' 'a' 'B' | 'b' 'A' 'c' 'C' 'd'   'B' | 'b', delete both sides of partition, stay
+'d' 'a' | 'A' 'c' 'C' 'd'           'a' | 'A', delete both sides of partition, stay
+'d' | 'c' 'C' 'd'                   'd' | 'C', move right
+'d' 'c' | 'C' 'd'                   'c' | 'C', delete both sides of partition, stay
+'d' | 'd'                           'd' | 'd', move right
+'d' 'd' |                           DONE
+</code></pre><p>Now this makes some sense, I can focus on line 1, and go down at line 10 in one breath, without ever backtracking my thoughts. I will now implement this in code.</p>
+<p>Let&rsquo;s look into what&rsquo;s on the left and right sides of the <code>|</code>. If I take one character from the left of the sequence, and compare it to what is at the right most of the left partition and use a comparison function to decide whether it will <code>append</code> to the left partition, or go down and take that right-most part with it, that sounds like similar operation to what the sketch above shows.</p>
+<p>In other words, at any given snapshot of <code>0 1 2 3 4 | 5 6 7</code>, <code>4</code> will be compared with <code>5</code> and if they are to react, then the data structure will look like <code>0 1 2 3 | 6 7</code> and if they are to not react, then they would look like <code>0 1 2 3 4 5 | 6 7</code>. So, the left data structure needs only the append or remove fast to the right most element (aka the last inserted item). So before I (finally), get into the code, I&rsquo;d need the following:</p>
+<ol>
+<li>A mechanism to read one element of a sequence</li>
+<li>A function that lets me compare two characters and decide whether they react or not, and</li>
+<li>A stack, that will maintain the <code>visited</code> values and with the exception of the top-most (right-most) character, it is guaranteed that no reaction can be possible.</li>
+</ol>
+<p>Here&rsquo;s how my <code>react</code> function looks like:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> react sequence <span style="color:#f92672">=</span>
+    sequence
+    <span style="color:#f92672">|&gt;</span> Seq.fold
+        <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> visited unitType <span style="color:#f92672">-&gt;</span>
+            <span style="color:#66d9ef">match</span> visited <span style="color:#66d9ef">with</span>
+            <span style="color:#f92672">|</span> right <span style="color:#f92672">::</span> nonReactive <span style="color:#66d9ef">when</span> abs <span style="color:#f92672">(</span>unitType <span style="color:#f92672">-</span> right<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 32 <span style="color:#f92672">-&gt;</span> nonReactive
+            <span style="color:#f92672">|</span> <span style="color:#f92672">_</span> <span style="color:#f92672">-&gt;</span> unitType <span style="color:#f92672">::</span> visited<span style="color:#f92672">)</span>
+        List<span style="color:#f92672">&lt;</span>int<span style="color:#f92672">&gt;.</span>Empty
+    <span style="color:#f92672">|&gt;</span> Seq.length
+</code></pre></div><p>This worked, and gave me a sweet <code>*</code>. Oh, I decided to <code>int</code> my character stream, though I realize I could just as well kept it as a string sequence and compared with converting both to either lower or upper case.</p>
+<p>Also, since I am using <code>fold</code> anyway, why not compute the <code>length</code> on the fly and keep it as a <code>state</code>? And get some point-freedom while at it? And let&rsquo;s just use some Stack terminology.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> react <span style="color:#f92672">=</span>
+    Seq.fold
+        <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> <span style="color:#f92672">(</span>length<span style="color:#f92672">,</span> stack<span style="color:#f92672">)</span> unitType <span style="color:#f92672">-&gt;</span>
+            <span style="color:#66d9ef">match</span> stack <span style="color:#66d9ef">with</span>
+            <span style="color:#f92672">|</span> top <span style="color:#f92672">::</span> bottom <span style="color:#66d9ef">when</span> abs <span style="color:#f92672">(</span>unitType <span style="color:#f92672">-</span> top<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 32 <span style="color:#f92672">-&gt;</span> <span style="color:#f92672">(</span>length <span style="color:#f92672">-</span> 1<span style="color:#f92672">,</span> bottom<span style="color:#f92672">)</span>
+            <span style="color:#f92672">|</span> <span style="color:#f92672">_</span> <span style="color:#f92672">-&gt;</span> <span style="color:#f92672">(</span>length <span style="color:#f92672">+</span> 1<span style="color:#f92672">,</span> unitType <span style="color:#f92672">::</span> stack<span style="color:#f92672">))</span>
+        <span style="color:#f92672">(</span>0<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>int<span style="color:#f92672">&gt;.</span>Empty<span style="color:#f92672">)</span>
+    <span style="color:#f92672">&gt;&gt;</span> fst
+</code></pre></div><p>I am happy with this code. And that concludes part 1.</p>
+<p>About part 2, well, it&rsquo;s just part 1 with some pseudo-brute-forcing. What if we removed all <code>a|A</code>-s from the sequence and ran the reaction? What if we removed <code>b|B</code>s? <code>c|C</code>-s? So you can see, we just need to call <code>react</code> function on 26 different inputs, and find the shortest non-reducable sequence. And this code looked like:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> solvePart2 input <span style="color:#f92672">=</span>
+    seq <span style="color:#f92672">{</span> 65 <span style="color:#f92672">..</span> 90 <span style="color:#f92672">}</span>
+    <span style="color:#f92672">|&gt;</span> Seq.map
+        <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> currentUnit <span style="color:#f92672">-&gt;</span>
+            input
+            <span style="color:#f92672">|&gt;</span> parse
+            <span style="color:#f92672">|&gt;</span> Seq.filter
+                <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> unitType <span style="color:#f92672">-&gt;</span>
+                    unitType <span style="color:#f92672">&lt;&gt;</span> currentUnit
+                    <span style="color:#f92672">&amp;&amp;</span> unitType <span style="color:#f92672">&lt;&gt;</span> <span style="color:#f92672">(</span>currentUnit <span style="color:#f92672">+</span> 32<span style="color:#f92672">))</span>
+            <span style="color:#f92672">|&gt;</span> react<span style="color:#f92672">)</span>
+    <span style="color:#f92672">|&gt;</span> Seq.min
+    <span style="color:#f92672">|&gt;</span> output
+</code></pre></div><p>So that concludes my day 17. I know my last blog post was labelled <code>Day 1</code> and this one <code>Day 17</code> (Or is it 16?), I solved 15 other problems in between while learning the language and didn&rsquo;t quite get the time to write about it. This one however, I wrote as I solved the problem and that was fun. Maybe I will do it more often.</p>
+<p>Until I solve another problem, or pick up one of the solve problems to discuss here, have a great evening!</p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>Mafinar K. 2021</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
