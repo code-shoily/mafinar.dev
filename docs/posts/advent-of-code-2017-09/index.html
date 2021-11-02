@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Picking garbages in groups :: mafinar.dev</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="In this post, I solve Advent of Code 2017, Day 9 puzzle and explain how I did it in F#" />
+<meta name="keywords" content="fsharp, 100-days-of-fsharp, advent-of-code, prag-pro-wri-mo" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/advent-of-code-2017-09/" />
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4YZF8LVTFQ"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-4YZF8LVTFQ', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon" href="/img/apple-touch-icon-192x192.png">
+
+  <link rel="shortcut icon" href="/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="mafinar" />
+  
+    <meta name="twitter:creator" content="@mafinar" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Picking garbages in groups">
+<meta property="og:description" content="In this post, I solve Advent of Code 2017, Day 9 puzzle and explain how I did it in F#" />
+<meta property="og:url" content="/posts/advent-of-code-2017-09/" />
+<meta property="og:site_name" content="mafinar.dev" />
+
+  <meta property="og:image" content="/">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2021-11-02 00:34:12 -0400 EDT" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    λ#
+  </div>
+</a>
+
+    </div>
+    
+  </div>
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/advent-of-code-2017-09/">Picking garbages in groups</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2021-11-02 
+      </span>
+    
+    
+    <span class="post-author">:: Mafinar K.</span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="/tags/fsharp/">fsharp</a>&nbsp;
+    
+    #<a href="/tags/100-days-of-fsharp/">100-days-of-fsharp</a>&nbsp;
+    
+    #<a href="/tags/advent-of-code/">advent-of-code</a>&nbsp;
+    
+    #<a href="/tags/pragprowrimo/">PragProWriMo</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>In today&rsquo;s post, I will describe my solution to Advent of Code year 2017, day 9&rsquo;s challenge. Let&rsquo;s <a href="https://adventofcode.com/2017/day/9">read the challenge description</a> before the explanation.</p>
+<h2 id="part-1">Part 1<a href="#part-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Part 1 of the problem expects us to report the total number of groups, as collected from the stream of characters. The rules are simple:</p>
+<ul>
+<li><code>{</code> marks the beginning of the group <strong>unless that&rsquo;s found in the garbage</strong></li>
+<li><code>}</code> marks the end of the group <strong>unless that&rsquo;s found in the garbage</strong></li>
+<li>First group encounter will have the level of <code>1</code>, nested groups will have their levels as their depth, as an example, the innermost group of <code>{{{}}}</code> will have level of <code>3</code>.</li>
+<li>Groups are separated by commas.</li>
+</ul>
+<p>Now that is the easy part, let&rsquo;s get to the garbage.</p>
+<ul>
+<li><code>&lt;</code> marks the beginning of garbage, anything after that are garbage (including <code>{</code> or <code>}</code>), until</li>
+<li><code>&gt;</code> is found. That marks the end of the garbage.</li>
+<li>If within the garbage, an <code>!</code> is encountered, then the following character is discarded, whether it is another <code>!</code> or any other delimiters.</li>
+</ul>
+<p>The puzzle description has great examples of what constitutes garbages and groups, and streams that would be puzzling to the eyes (such as <code>}</code> inside garbage or <code>&gt;</code> after discards) are also there, so this problem is very test-case friendly.</p>
+<p>Our goal for this part is to add up all the group levels accummulated from the stream.</p>
+<h3 id="the-solution">The solution<a href="#the-solution" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>This problem smelled like state machine and when dealing with F#, I could immediately picture a solution in my head. But what would aid me more is a picture of the state transitions. So I fired up a <a href="https://mermaid.live/">Mermaid Live</a> and type in the following state transitions:</p>
+<pre tabindex="0"><code>stateDiagram-v2
+    [*] --&gt; GroupStarted: &quot;{&quot; level++
+    GroupStarted --&gt; GroupEnded: &quot;}&quot; level--
+    GroupStarted --&gt; GarbageStarted: &quot;&lt;&quot;
+    GarbageStarted --&gt; GarbageEnded: &quot;&gt;&quot;
+    GarbageEnded --&gt; GroupEnded: &quot;}&quot;
+    GarbageStarted --&gt; DiscardNext: &quot;!&quot;
+    DiscardNext --&gt; GarbageStarted: Any character
+    GarbageStarted --&gt; GarbageStarted: Any character EXCEPT &quot;&gt;&quot; and &quot;!&quot;
+    GroupEnded --&gt; GroupEnded: &quot;,&quot;
+    GroupEnded --&gt; GroupStarted: &quot;{&quot;
+    GroupEnded --&gt; [*]: All characters processed
+</code></pre><p>And the following image is produced:</p>
+<p><img src="/state-chart.png" alt="Alt text" title="State Machine"></p>
+<p>We can see that, there is a <code>GroupMode</code> and a <code>GarbageMode</code> and the upcoming character has different effect to the overall state in different <code>Mode</code>-s. There is also a <code>DiscardMode</code> that discards the upcoming character, thereby affecting the closing of <code>GarbageMode</code>.</p>
+<p>How would the F# look like?</p>
+<p>Since we are dealing with streams, we can go for a recursive function, that processes a list in <code>head :: rest</code> pattern. And we can have a state type representing the state of the state machine. We can then have a <code>collection</code> function that takes in a state, and then recursively calls itself, processing one character at a time - a character that resides inside the state.</p>
+<p>Let&rsquo;s see what can we have in the state type-</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">CollectionState</span> <span style="color:#f92672">=</span>
+    <span style="color:#f92672">{</span> Stream<span style="color:#f92672">:</span> <span style="color:#66d9ef">char</span> <span style="color:#66d9ef">list</span>
+      Count<span style="color:#f92672">:</span> int
+      GarbageMode<span style="color:#f92672">:</span> <span style="color:#66d9ef">bool</span>
+      DiscardMode<span style="color:#f92672">:</span> <span style="color:#66d9ef">bool</span>
+      Total<span style="color:#f92672">:</span> int <span style="color:#f92672">}</span>
+</code></pre></div><p>So, we have a <code>GarbageMode</code> and a <code>DiscardMode</code>, <code>Stream</code> representing the characters we have left to process (and classify as a garbage or collect as a group), and <code>Total</code> which is a sum-total of the groups collected. The <code>Count</code> variable here adds the depth of the group.</p>
+<p>So from that definition, we have the terminating condition of the processing, when the <code>Stream</code> is empty (aka we have processed everything). If we patternize the <code>Stream</code> as <code>current :: upcoming</code>, then just by giving <code>Stream</code> the value of <code>upcoming</code>, we are progressing through the list, churning characters. Also, we want the <code>Total</code> to have the total number of groups.</p>
+<p>So, let&rsquo;s see how a preliminary version of the function look like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> rec collect_groups <span style="color:#f92672">(</span>state<span style="color:#f92672">:</span> CollectionState<span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">match</span> state <span style="color:#66d9ef">with</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> []<span style="color:#f92672">;</span> Total <span style="color:#f92672">=</span> total <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span> total
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#f92672">_</span> <span style="color:#f92672">::</span> remaining
+        Total <span style="color:#f92672">=</span> total <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        collect_groups
+            <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                    Stream <span style="color:#f92672">=</span> remaining
+                    Total <span style="color:#f92672">=</span> total <span style="color:#f92672">+</span> 1 <span style="color:#f92672">}</span>
+</code></pre></div><p>Now, if we pass <code>{ Stream = input; Count = 1; GarbageMode = false; DiscardMode = false; Total = 0 }</code> to it where <code>input</code> is a string <code>|&gt; List.ofSeq</code>ified, we will, unsurprisingly, get the number of characters in that string. Because we didn&rsquo;t deal with the <code>Mode</code>-s, or character effects as portrayed in the state-chart above.</p>
+<p>Let&rsquo;s now assume that there is just one mode - the group mode, and our input is a lot simpler one - one comprising of <code>{}</code> and <code>,</code> to separated them. Let&rsquo;s refer back to the state chart and see what we can do -</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> rec collect_groups <span style="color:#f92672">(</span>state<span style="color:#f92672">:</span> CollectionState<span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">match</span> state <span style="color:#66d9ef">with</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> []<span style="color:#f92672">;</span> Total <span style="color:#f92672">=</span> total <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span> total
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;{&#39;</span> <span style="color:#f92672">::</span> remaining
+        Count <span style="color:#f92672">=</span> count
+        Total <span style="color:#f92672">=</span> total <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        collect_groups
+            <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                    Stream <span style="color:#f92672">=</span> remaining
+                    Count <span style="color:#f92672">=</span> count <span style="color:#f92672">+</span> 1
+                    Total <span style="color:#f92672">=</span> total <span style="color:#f92672">+</span> count <span style="color:#f92672">}</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;}&#39;</span> <span style="color:#f92672">::</span> remaining
+        Count <span style="color:#f92672">=</span> count <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        collect_groups
+            <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                    Stream <span style="color:#f92672">=</span> remaining
+                    Count <span style="color:#f92672">=</span> count <span style="color:#f92672">-</span> 1 <span style="color:#f92672">}</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;,&#39;</span> <span style="color:#f92672">::</span> remaining <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span> collect_groups <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span> Stream <span style="color:#f92672">=</span> remaining <span style="color:#f92672">}</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">_</span> <span style="color:#f92672">-&gt;</span> failwith <span style="color:#e6db74">&#34;Invalid State&#34;</span>
+</code></pre></div><p>This time, we compute the level and sum them up, provided we are given only <code>{</code>, <code>}</code> amd <code>,</code>. For example, giving <code>&quot;{{{}},{},{},{{}}}&quot; |&gt; List.ofSeq</code> would give us <code>15</code>. However, the input given in the problem wouldn&rsquo;t, because I intentionally made invalid state irrepresentable through that <code>failwith</code>.</p>
+<p>So when would a <code>&lt;</code> constitute the beginning of a garbage? When <code>GarbageMode</code> is <code>false</code> and <code>DiscardMode</code> is <code>false</code>. And <code>&gt;</code> will mark the end of a garbage when <code>GarbageMode</code> is <code>true</code> and <code>DiscardMode</code> is <code>false</code>. So, the pattern above will be updated with a <code>{GarbageMode = false}</code> to ensure that group is formed if and only if it is not in <code>GarbageMode</code>.</p>
+<p>Now, if we refer to the state chart, we see that <code>DiscardNext</code> only takes place AFTER <code>GarbageStarted</code> happens. In other words, there is no scenario where <code>DiscardNext</code> is <code>true</code> and <code>GarbageMode</code> is <code>false</code>, that would be impossible state, therefore, our matching should reflect that. And when in <code>DiscardMode</code>, the flow is just <code>{Stream = rest}</code>ed, and the <code>DiscardMode</code> is immediately turned <code>off</code>.</p>
+<p>Now, if we combine the pattern above with the state chart, we can easily visualize and form the function in full -</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> rec collect_groups <span style="color:#f92672">(</span>state<span style="color:#f92672">:</span> CollectionState<span style="color:#f92672">)</span> <span style="color:#f92672">=</span>
+    <span style="color:#66d9ef">match</span> state <span style="color:#66d9ef">with</span>
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> []<span style="color:#f92672">;</span> Total <span style="color:#f92672">=</span> total <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span> total
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;{&#39;</span> <span style="color:#f92672">::</span> rest
+        Count <span style="color:#f92672">=</span> count
+        GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+        Total <span style="color:#f92672">=</span> total <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                Stream <span style="color:#f92672">=</span> rest
+                Count <span style="color:#f92672">=</span> count <span style="color:#f92672">+</span> 1
+                Total <span style="color:#f92672">=</span> count <span style="color:#f92672">+</span> total <span style="color:#f92672">}</span>
+        <span style="color:#f92672">|&gt;</span> collect_groups
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;}&#39;</span> <span style="color:#f92672">::</span> rest
+        Count <span style="color:#f92672">=</span> count
+        GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                Stream <span style="color:#f92672">=</span> rest
+                Count <span style="color:#f92672">=</span> count <span style="color:#f92672">-</span> 1 <span style="color:#f92672">}</span>
+        <span style="color:#f92672">|&gt;</span> collect_groups
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&lt;&#39;</span> <span style="color:#f92672">::</span> rest
+        GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                Stream <span style="color:#f92672">=</span> rest
+                GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">}</span>
+        <span style="color:#f92672">|&gt;</span> collect_groups
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#f92672">_</span> <span style="color:#f92672">::</span> rest
+        DiscardMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                Stream <span style="color:#f92672">=</span> rest
+                DiscardMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">}</span>
+        <span style="color:#f92672">|&gt;</span> collect_groups
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;!&#39;</span> <span style="color:#f92672">::</span> rest
+        GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                Stream <span style="color:#f92672">=</span> rest
+                DiscardMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">}</span>
+        <span style="color:#f92672">|&gt;</span> collect_groups
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&gt;&#39;</span> <span style="color:#f92672">::</span> rest
+        GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span>
+        <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span>
+                Stream <span style="color:#f92672">=</span> rest
+                GarbageMode <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">}</span>
+        <span style="color:#f92672">|&gt;</span> collect_groups
+    <span style="color:#f92672">|</span> <span style="color:#f92672">{</span> Stream <span style="color:#f92672">=</span> <span style="color:#f92672">_</span> <span style="color:#f92672">::</span> rest <span style="color:#f92672">}</span> <span style="color:#f92672">-&gt;</span> <span style="color:#f92672">{</span> state <span style="color:#66d9ef">with</span> Stream <span style="color:#f92672">=</span> rest <span style="color:#f92672">}</span> <span style="color:#f92672">|&gt;</span> collect_groups
+</code></pre></div><p>And it worked on my machine!</p>
+<p>A few things I learned while doing this:</p>
+<ul>
+<li>Learned to love <code>{ state with ...}</code> instead of forming the whole thing</li>
+<li>Made sure to not provide unnecessary patterns (i.e. <code>GarbageMode = true</code> when that branch can never have <code>GarbageMode</code> as true), this took a refactor and I think wasn&rsquo;t totally necessary.</li>
+<li>Resisted the temptation to use tuples. Tuple could have been fine, but I preferred having the attributes in my face, instead of just a group of values.</li>
+</ul>
+<p>This problem was fun to solve, and I thought I&rsquo;d write about it here. Also, this had similarities with the <a href="/posts/many-ways-to-reach-a-floor/">first blog post I wrote in this site</a> - with an added complication.</p>
+<p>Now, about Part 2 of the problem, it was very much similar to part 1 with different logic to compute the <code>Count</code> and <code>Total</code>. And the fact I called <code>Count</code> <code>Count</code> instead of the more semantically appropriate <code>Level</code> has to do with the fact I reused this state for <code>Part 2</code> and extracted the snippets from my original code. Both solutions can be <a href="https://github.com/code-shoily/AdventOfCode/blob/master/fsharp/Y17/Year2017Day09.fs">viewed from the repository</a>.</p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>Mafinar K. 2021</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -134,14 +134,14 @@ if (!doNotTrack) {
 <p>When I first encountered LIFO (i.e. Stack) data structures back in my Algorithmics course, I found the implementation to be easy compared to, say linked lists, however, to identify its use in a real life problem (for instance, parenthesis matching) was something I had struggled with. I mean, I would probably be able to solve one with stitching expressions and statements together, but to immediately realize that the problem is addressable with a stack never came to me easily. I eventually overcame that (Or so I think), and today&rsquo;s post, and the advent of code puzzle involved, involves a LIFO.</p>
 <p>So what does the <a href="//adventofcode.com/2018/day/5">description</a> say? To summarize, any <code>&lt;lower-case&gt;&lt;upper-case&gt;</code> or <code>&lt;upper-case&gt;&lt;lower-case&gt;</code> sequence of the same letter needs to evaporate in a sequence of letters (unit type, they say), and you keep collapsing such pairs until there remains no other pairs that satisfy the logic. That&rsquo;s when you output the length of a non-reducible sequence of units.</p>
 <p>To give an example (I copied the example from the site as-is):</p>
-<pre><code>dabAcCaCBAcCcaDA  The first 'cC' is removed.
+<pre tabindex="0"><code>dabAcCaCBAcCcaDA  The first 'cC' is removed.
 dabAaCBAcCcaDA    This creates 'Aa', which is removed.
 dabCBAcCcaDA      Either 'cC' or 'Cc' are removed (the result is the same).
 dabCBAcaDA        No further actions can be taken.
 </code></pre><p>The result of the above sequence would be the length of the non-reducible sequence <code>dabCBAcaDA</code>, or <code>10</code>. Now they slapped me with a <code>50_000</code> character sequence that is to follow this process.</p>
 <p>When writing programs in F# (and I only had 17 days of it), I found that treating input as a sequence, and pouring that sequence through a series of transformations helps me produce tolerable looking code. And to assume that everything already happened and exists (as oppose to my function making them happen) helps me further.</p>
 <p>For instance, let&rsquo;s see how I would see the sequence of <code>units</code> as mentioned here transform to get my non-reducible output:</p>
-<pre><code>daBbAcCd                                                                    The input.
+<pre tabindex="0"><code>daBbAcCd                                                                    The input.
 'd' 'a' 'B' 'b' 'A' 'c' 'C' 'd'                                             As Character Stream
 ('d' 'a') ('a' 'B') ('B' 'b') ('b' 'A') ('A' 'c') ('c' 'C') ('C' 'd')       In two-s
 ('d' 'a') ('a' _) (_ 'A') ('A' _) (_ 'd')                                   Get rid of (a, b) where (lower a) = (lower b)
@@ -151,7 +151,7 @@ dabCBAcaDA        No further actions can be taken.
 'd' 'd'
 </code></pre><p>This series transformations works, in paper and pencil, and given <code>Seq.windowed</code> exists and there is nothing one can&rsquo;t do with <code>Seq.fold</code>, I am fairly certain that I could whip up a nice little F# code out of it. Possible? Yes. Succint? Maybe. Elegant? I am not quite sure.</p>
 <p>So, I gave myself fifteen more minutes to think a bit more on this. I used the term &ldquo;pour&rdquo; earlier, so what if I pour in the <code>unit type</code>-s, hold what I just poured and match it with the next drop? Let&rsquo;s sketch it again:</p>
-<pre><code>daBbAcCd                            The input.
+<pre tabindex="0"><code>daBbAcCd                            The input.
 'd' 'a' 'B' 'b' 'A' 'c' 'C' 'd'     As Character Stream
 'd' | 'a' 'B' 'b' 'A' 'c' 'C' 'd'   Partition after head, 'd' | 'a', move right.
 'd' 'a' | 'B' 'b' 'A' 'c' 'C' 'd'   'a' | 'B', move right
@@ -170,7 +170,7 @@ dabCBAcaDA        No further actions can be taken.
 <li>A stack, that will maintain the <code>visited</code> values and with the exception of the top-most (right-most) character, it is guaranteed that no reaction can be possible.</li>
 </ol>
 <p>Here&rsquo;s how my <code>react</code> function looks like:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> react sequence <span style="color:#f92672">=</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> react sequence <span style="color:#f92672">=</span>
     sequence
     <span style="color:#f92672">|&gt;</span> Seq.fold
         <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> visited unitType <span style="color:#f92672">-&gt;</span>
@@ -181,7 +181,7 @@ dabCBAcaDA        No further actions can be taken.
     <span style="color:#f92672">|&gt;</span> Seq.length
 </code></pre></div><p>This worked, and gave me a sweet <code>* (gold star)</code>. Oh, I decided to <code>int</code> my character stream as the pre-processing ritual, though I realized I could just as well have kept it as a string sequence and compared with converting both to either lower or upper case.</p>
 <p>Also, since I am using <code>fold</code> anyway, why not compute the <code>length</code> on the fly and keep it as a <code>state</code>? And get some point-freedom while at it? And let&rsquo;s just use some Stack terminologies.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> react <span style="color:#f92672">=</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> react <span style="color:#f92672">=</span>
     Seq.fold
         <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> <span style="color:#f92672">(</span>length<span style="color:#f92672">,</span> stack<span style="color:#f92672">)</span> unitType <span style="color:#f92672">-&gt;</span>
             <span style="color:#66d9ef">match</span> stack <span style="color:#66d9ef">with</span>
@@ -191,7 +191,7 @@ dabCBAcaDA        No further actions can be taken.
     <span style="color:#f92672">&gt;&gt;</span> fst
 </code></pre></div><p>I am happy with this code. And that concludes part 1.</p>
 <p>About part 2, well, it&rsquo;s just part 1 with some pseudo-brute-forcing. What if we removed all <code>a|A</code>-s from the sequence and ran the reaction? What if we removed <code>b|B</code>s? <code>c|C</code>-s? So you can see, we just need to call <code>react</code> function on 26 different inputs, and find the shortest non-reducable sequence. And this code looked like:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> solvePart2 input <span style="color:#f92672">=</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fsharp" data-lang="fsharp"><span style="color:#66d9ef">let</span> solvePart2 input <span style="color:#f92672">=</span>
     seq <span style="color:#f92672">{</span> 65 <span style="color:#f92672">..</span> 90 <span style="color:#f92672">}</span>
     <span style="color:#f92672">|&gt;</span> Seq.map
         <span style="color:#f92672">(</span><span style="color:#66d9ef">fun</span> currentUnit <span style="color:#f92672">-&gt;</span>

@@ -7,11 +7,11 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Mafinar K. 2021</copyright>
-    <lastBuildDate>Mon, 02 Aug 2021 00:16:59 -0400</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 02 Nov 2021 00:34:12 -0400</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>100-days-of-fsharp</title>
       <link>/tags/100-days-of-fsharp/</link>
-      <pubDate>Mon, 02 Aug 2021 00:16:59 -0400</pubDate>
+      <pubDate>Tue, 02 Nov 2021 00:34:12 -0400</pubDate>
       
       <guid>/tags/100-days-of-fsharp/</guid>
       <description></description>
@@ -21,7 +21,7 @@
     <item>
       <title>advent-of-code</title>
       <link>/tags/advent-of-code/</link>
-      <pubDate>Mon, 02 Aug 2021 00:16:59 -0400</pubDate>
+      <pubDate>Tue, 02 Nov 2021 00:34:12 -0400</pubDate>
       
       <guid>/tags/advent-of-code/</guid>
       <description></description>
@@ -31,9 +31,19 @@
     <item>
       <title>fsharp</title>
       <link>/tags/fsharp/</link>
-      <pubDate>Mon, 02 Aug 2021 00:16:59 -0400</pubDate>
+      <pubDate>Tue, 02 Nov 2021 00:34:12 -0400</pubDate>
       
       <guid>/tags/fsharp/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>PragProWriMo</title>
+      <link>/tags/pragprowrimo/</link>
+      <pubDate>Tue, 02 Nov 2021 00:34:12 -0400</pubDate>
+      
+      <guid>/tags/pragprowrimo/</guid>
       <description></description>
       <content></content>
     </item>
